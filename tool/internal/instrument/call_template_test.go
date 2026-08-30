@@ -33,13 +33,19 @@ func TestNewCallTemplate_InvalidSyntax(t *testing.T) {
 }
 
 func TestNewCallTemplate_EmptyTemplate(t *testing.T) {
-	text := ""
+	tmpl, err := newCallTemplate("")
 
-	tmpl, err := newCallTemplate(text)
+	require.Error(t, err)
+	assert.Nil(t, tmpl)
+	assert.Contains(t, err.Error(), "must not be empty or whitespace-only")
+}
 
-	require.NoError(t, err)
-	assert.NotNil(t, tmpl)
-	assert.Equal(t, text, tmpl.String())
+func TestNewCallTemplate_WhitespaceOnlyTemplate(t *testing.T) {
+	tmpl, err := newCallTemplate("   ")
+
+	require.Error(t, err)
+	assert.Nil(t, tmpl)
+	assert.Contains(t, err.Error(), "must not be empty or whitespace-only")
 }
 
 func TestCallTemplateData_FuncName(t *testing.T) {
@@ -678,20 +684,11 @@ func TestCompileExpression_SelectorExpression(t *testing.T) {
 }
 
 func TestCompileExpression_EmptyResult(t *testing.T) {
-	// Template that produces nothing (empty expression)
-	tmpl, err := newCallTemplate("")
-	require.NoError(t, err)
+	// newCallTemplate now rejects empty input at construction time.
+	_, err := newCallTemplate("")
 
-	originalCall := &dst.CallExpr{
-		Fun: &dst.Ident{Name: "test"},
-	}
-
-	result, err := tmpl.compileExpression(originalCall, nil)
-
-	// Should error because the function body is empty
 	require.Error(t, err)
-	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "function body is empty")
+	assert.Contains(t, err.Error(), "must not be empty or whitespace-only")
 }
 
 func TestCompileExpression_PlaceholderNotReplaced(t *testing.T) {

@@ -39,6 +39,9 @@ type callTemplate struct {
 //
 //	newCallTemplate("wrapper({{ . }})")
 func newCallTemplate(text string) (*callTemplate, error) {
+	if strings.TrimSpace(text) == "" {
+		return nil, ex.New("call template text must not be empty or whitespace-only")
+	}
 	tmpl, err := template.New("call").Parse(text)
 	if err != nil {
 		return nil, ex.Newf("failed to parse template %s", text)
